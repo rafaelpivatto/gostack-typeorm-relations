@@ -29,7 +29,7 @@ export default class CreateOrderProduct1591317661217
           },
           {
             name: 'price',
-            type: 'decimal',
+            type: 'numeric(7,2)',
           },
           {
             name: 'quantity',

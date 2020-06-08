@@ -39,6 +39,10 @@ class CreateOrderService {
 
     const allProducts = await this.productsRepository.findAllById(products);
 
+    if (!allProducts || allProducts.length !== products.length) {
+      throw new AppError('Invalid product');
+    }
+
     const productList = allProducts.map(prod => {
       const quantity = products.find(prodFind => prodFind.id === prod.id)
         ?.quantity;
@@ -49,7 +53,7 @@ class CreateOrderService {
 
       const product = {
         product_id: prod.id,
-        price: prod.price * quantity,
+        price: prod.price,
         quantity,
       };
 

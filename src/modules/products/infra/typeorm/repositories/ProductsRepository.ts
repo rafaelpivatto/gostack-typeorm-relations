@@ -58,6 +58,8 @@ class ProductsRepository implements IProductsRepository {
     products: IUpdateProductsQuantityDTO[],
   ): Promise<Product[]> {
     // TODO
+    const productList: Product[] = [];
+    return productList;
   }
 }
 

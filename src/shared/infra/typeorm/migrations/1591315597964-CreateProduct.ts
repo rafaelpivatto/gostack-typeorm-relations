@@ -19,7 +19,7 @@ export default class CreateProduct1591315597964 implements MigrationInterface {
           },
           {
             name: 'price',
-            type: 'decimal',
+            type: 'numeric(7,2)',
           },
           {
             name: 'quantity',

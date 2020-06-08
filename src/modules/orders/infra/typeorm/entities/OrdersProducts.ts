@@ -30,7 +30,7 @@ class OrdersProducts {
   @Column()
   order_id: string;
 
-  @Column('decimal', { precision: 5, scale: 2 })
+  @Column('float', { precision: 5, scale: 2 })
   price: number;
 
   @Column()
