@@ -4,8 +4,10 @@ import AppError from '@shared/errors/AppError';
 
 import IProductsRepository from '@modules/products/repositories/IProductsRepository';
 import ICustomersRepository from '@modules/customers/repositories/ICustomersRepository';
+import IUpdateProductsQuantityDTO from '@modules/products/dtos/IUpdateProductsQuantityDTO';
 import Order from '../infra/typeorm/entities/Order';
 import IOrdersRepository from '../repositories/IOrdersRepository';
+import ICreateOrderDTO from '../dtos/ICreateOrderDTO';
 
 interface IProduct {
   id: string;
@@ -37,33 +39,48 @@ class CreateOrderService {
       throw new AppError('Customer not found');
     }
 
-    const allProducts = await this.productsRepository.findAllById(products);
+    const allStockedProducts = await this.productsRepository.findAllById(
+      products,
+    );
 
-    if (!allProducts || allProducts.length !== products.length) {
-      throw new AppError('Invalid product');
+    if (!allStockedProducts || allStockedProducts.length !== products.length) {
+      throw new AppError('Invalid product in list');
     }
 
-    const productList = allProducts.map(prod => {
-      const quantity = products.find(prodFind => prodFind.id === prod.id)
-        ?.quantity;
+    const productsToUpdate: IUpdateProductsQuantityDTO[] = [];
+    const orderedProducts: ICreateOrderDTO = {
+      customer,
+      products: [],
+    };
 
-      if (!quantity) {
-        throw new AppError('product not found');
+    allStockedProducts.forEach(CurrentStockProduct => {
+      const orderedQuantity = products.find(
+        orderProduct => orderProduct.id === CurrentStockProduct.id,
+      )?.quantity;
+
+      if (!orderedQuantity) {
+        throw new AppError('Product ordered not found');
       }
 
-      const product = {
-        product_id: prod.id,
-        price: prod.price,
-        quantity,
-      };
+      if (CurrentStockProduct.quantity - orderedQuantity < 0) {
+        throw new AppError('Insuficient quantity for the product');
+      }
 
-      return product;
+      productsToUpdate.push({
+        ...CurrentStockProduct,
+        quantity: CurrentStockProduct.quantity - orderedQuantity,
+      });
+
+      orderedProducts.products.push({
+        product_id: CurrentStockProduct.id,
+        price: CurrentStockProduct.price,
+        quantity: orderedQuantity,
+      });
     });
 
-    const order = await this.ordersRepository.create({
-      customer,
-      products: productList,
-    });
+    await this.productsRepository.updateQuantity(productsToUpdate);
+
+    const order = await this.ordersRepository.create(orderedProducts);
 
     return order;
   }
